@@ -34,7 +34,17 @@ def get_embeddings_from_csv(
     - Generate a unique ID for each document (e.g., using the line number).
     """
     # Implement your code here
-    pass
+    documents = [];
+    metadatas = [];
+    ids = [];
+
+    for index, r in enumerate(csv_file_data):  
+        if(index > 0) :
+            documents.append(r[1])
+            metadatas.append(r[0])
+            ids.append("Id" + str(index))
+    #print(f" documents {documents} \n metadatas {metadatas} \n ids {ids}")
+    return documents, metadatas, ids
 
 
 def get_chromadb_collection(
@@ -60,7 +70,19 @@ def get_chromadb_collection(
     - Add the documents, metadatas, and ids to the collection using the collection.add method.
     """
     # Implement your code here
-    pass
+    client = chromadb.PersistentClient(path = "./chroma")
+
+    try:
+        client.delete_collection(name="semantic-lab")
+    except ValueError:
+        print(f"semantic-lab collection does not exist. creating new collection")
+
+    collection = client.get_or_create_collection(name="semantic-lab")
+    #for m in metadatas:
+    #print(metadatas)
+    collection.add(documents=[d for d in documents], metadatas=[{"title" : m} for m in metadatas], ids=[id for id in ids])
+
+    return collection
 
 
 def get_collection_query(user_input: str) -> chromadb.QueryResult:
@@ -81,7 +103,11 @@ def get_collection_query(user_input: str) -> chromadb.QueryResult:
     - Return the query result.
     """
     # Implement your code here
-    pass
+    client = chromadb.PersistentClient(path = "./chroma")
+
+    collection = client.get_or_create_collection(name="semantic-lab")
+
+    return collection.query(query_texts=[user_input], n_results=5)
 
 
 # ------------------------------------------------------------------------------
@@ -135,7 +161,7 @@ def main():
 
         # Print the results
         # Note: Remove the 'documents' key if you don't want to print only documents
-        pprint.pprint(results["documents"])
+        pprint.pprint(results['documents'])
 
         input("\nPress enter to continue...")
 
